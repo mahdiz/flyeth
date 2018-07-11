@@ -30,7 +30,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/mahdiz/flyclient/impl/flyeth"
+	"github.com/mahdiz/flyeth"
 )
 
 var (
