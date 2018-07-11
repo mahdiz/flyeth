@@ -25,11 +25,12 @@ import (
 	"sync/atomic"
 	"time"
 	"unsafe"
-
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/ethereum/go-ethereum/rlp"
+	"github.com/mahdiz/flyclient/impl/flyeth"
 )
 
 var (
@@ -72,6 +73,7 @@ type Header struct {
 	UncleHash   common.Hash    `json:"sha3Uncles"       gencodec:"required"`
 	Coinbase    common.Address `json:"miner"            gencodec:"required"`
 	Root        common.Hash    `json:"stateRoot"        gencodec:"required"`
+	MMRroot     common.Hash    `json:"mmrRoot"          gencodec:"required"`
 	TxHash      common.Hash    `json:"transactionsRoot" gencodec:"required"`
 	ReceiptHash common.Hash    `json:"receiptsRoot"     gencodec:"required"`
 	Bloom       Bloom          `json:"logsBloom"        gencodec:"required"`
@@ -118,6 +120,7 @@ func (h *Header) HashNoNonce() common.Hash {
 		h.GasUsed,
 		h.Time,
 		h.Extra,
+		h.MMRroot,
 	})
 }
 
@@ -200,6 +203,16 @@ type storageblock struct {
 func NewBlock(header *Header, txs []*Transaction, uncles []*Header, receipts []*Receipt) *Block {
 	b := &Block{header: CopyHeader(header), td: new(big.Int)}
 
+	//node := &flyeth.Node{ Hash: b.header.ParentHash }
+	if(int(b.header.Number.Int64()) == 0){
+		flyeth.MainRootNode = nil
+	}else if( flyeth.MainRootNode == nil || flyeth.MainRootNode.LeafCount == int(b.header.Number.Int64())){
+		flyeth.MainRootNode = flyeth.AddNode(flyeth.MainRootNode , b.header.ParentHash)
+                fmt.Println(flyeth.MainRootNode.Hash)
+		b.header.MMRroot = flyeth.MainRootNode.Hash
+	}else {
+		b.header.MMRroot = flyeth.MainRootNode.Hash
+	}
 	// TODO: panic if len(txs) != len(receipts)
 	if len(txs) == 0 {
 		b.header.TxHash = EmptyRootHash
