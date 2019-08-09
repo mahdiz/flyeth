@@ -1,10 +1,11 @@
-package flyeth
+package main
 
 import (
 	"fmt"
 	"math/rand"
 	"math"
 	"crypto/sha256"
+	"encoding/hex"
 )
 
 type Hash []byte
@@ -83,7 +84,8 @@ func PrintMmr(root *Node, indent string, right bool) {
 		fmt.Print("|-")
 		indent += "|\t"
 	}
-	fmt.Println(root.Hash)
+	str := hex.EncodeToString(root.Hash)
+	fmt.Println("0x" + str)
 
 	PrintMmr(root.Left, indent, false)
 	PrintMmr(root.Right, indent, true)
@@ -113,7 +115,7 @@ func main() {
 	var mmr *Node
 	randomBytes := make([]byte, 2)
 
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 500; i++ {
 		rand.Read(randomBytes)
 		blockHash := GetHash(randomBytes)
 		mmr = AddNode(mmr, blockHash)
